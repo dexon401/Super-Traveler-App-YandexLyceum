@@ -52,6 +52,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.fromCBox.addItems([*map(lambda place: place["name"], PLACES)])
         self.toCBox.addItems([*map(lambda place: place["name"], PLACES)])
+        
+        self.dateEdit.setDate(datetime.now())
 
         self.showBtn.clicked.connect(self.on_show_btn_press)
 

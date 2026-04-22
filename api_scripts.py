@@ -4,7 +4,6 @@ from datetime import datetime
 
 TRANSPORT_API_KEY = "Ключ можно получить здесь: https://tech.yandex.ru/rasp/raspapi/"
 
-
 TRANSPORT_TYPES = {
     "plane": "Cамолет",
     "train": "Поезд",
@@ -39,14 +38,15 @@ def get_schedule(src, dest, date):
     for segment in data["segments"]:
         transport_type = segment["thread"]["transport_type"]
         number = segment["thread"]["number"]
-        title = segment["thread"]["short_title"]
         departure = datetime.fromisoformat(segment["departure"])
         arrival = datetime.fromisoformat(segment["arrival"])
         duration = segment["duration"]
-        string_duration = f"{duration // 3600}ч {(duration % 3600) // 60}мин"
-        
-        result.append(
-            f"{TRANSPORT_TYPES[transport_type]}\t{number}\t{title}\t{departure.strftime("%H:%M")}\t{arrival.strftime("%H:%M")}\t{string_duration}"
+        string_duration = (
+            f"{round(duration // 3600)}ч {round((duration % 3600) // 60)}мин"
         )
-    
+
+        result.append(
+            f"{TRANSPORT_TYPES[transport_type]}\t{number}\t{departure.strftime("%H:%M")}\t{arrival.strftime("%H:%M")}\t{string_duration}"
+        )
+
     return result
