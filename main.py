@@ -12,6 +12,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
 
         self.setupUi(self)
+        
+        self.fromCBox.addItems([
+            
+        ])
 
 
 if __name__ == "__main__":
