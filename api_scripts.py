@@ -2,8 +2,6 @@ import requests
 import sys
 from datetime import datetime
 
-TRANSPORT_API_KEY = "Ключ можно получить здесь: https://tech.yandex.ru/rasp/raspapi/"
-
 TRANSPORT_TYPES = {
     "plane": "Cамолет",
     "train": "Поезд",
@@ -13,10 +11,18 @@ TRANSPORT_TYPES = {
     "helicopter": "Вертолет",
 }
 
+PREC_TYPES = {
+    "NO_TYPE": "Без осадков",
+    "RAIN": "Дождь",
+    "SLEET": "Снег с дождем",
+    "SNOW": "Снег",
+    "HAIL": "Град"
+}
 
-def get_schedule(src, dest, date):
+
+def get_schedule(src, dest, date, transport_key):
     params = {
-        "apikey": TRANSPORT_API_KEY,
+        "apikey": transport_key,
         "from": src,
         "to": dest,
         "format": "json",
@@ -50,3 +56,36 @@ def get_schedule(src, dest, date):
         )
 
     return result
+
+def get_weather(lat, lon, date, weather_key):
+    date = datetime.strptime(date, "%Y-%m-%d")
+    days = (date.day - datetime.now().day)
+    
+    if days < 0 or days > 10:
+        return None
+    
+    headers = {"X-Yandex-Weather-Key": weather_key}
+    query = """
+    {
+        weatherByPoint(request: { lat: %f, lon: %f}) {
+            forecast {
+                days(limit: %d) {
+                    parts {
+                        day {
+                            temperature
+                            precType
+                        }  
+                    }
+                }
+            }
+        }
+    }
+    """ % (lat, lon, days + 1)
+    response = requests.post(
+        'https://api.weather.yandex.ru/graphql/query',
+        headers=headers,
+        json={'query': query}
+    )
+    forecast = response.json()["data"]["weatherByPoint"]["forecast"]["days"][-1]["parts"]["day"]
+    
+    return [f"Осадки: {PREC_TYPES[forecast["precType"]]}", f"Температура: {forecast["temperature"]}"]
