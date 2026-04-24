@@ -16,7 +16,7 @@ PREC_TYPES = {
     "RAIN": "Дождь",
     "SLEET": "Снег с дождем",
     "SNOW": "Снег",
-    "HAIL": "Град"
+    "HAIL": "Град",
 }
 
 
@@ -57,13 +57,14 @@ def get_schedule(src, dest, date, transport_key):
 
     return result
 
+
 def get_weather(lat, lon, date, weather_key):
     date = datetime.strptime(date, "%Y-%m-%d")
-    days = (date.day - datetime.now().day)
-    
+    days = date.day - datetime.now().day
+
     if days < 0 or days > 10:
         return None
-    
+
     headers = {"X-Yandex-Weather-Key": weather_key}
     query = """
     {
@@ -80,12 +81,40 @@ def get_weather(lat, lon, date, weather_key):
             }
         }
     }
-    """ % (lat, lon, days + 1)
-    response = requests.post(
-        'https://api.weather.yandex.ru/graphql/query',
-        headers=headers,
-        json={'query': query}
+    """ % (
+        lat,
+        lon,
+        days + 1,
     )
-    forecast = response.json()["data"]["weatherByPoint"]["forecast"]["days"][-1]["parts"]["day"]
-    
-    return [f"Осадки: {PREC_TYPES[forecast["precType"]]}", f"Температура: {forecast["temperature"]}"]
+    response = requests.post(
+        "https://api.weather.yandex.ru/graphql/query",
+        headers=headers,
+        json={"query": query},
+    )
+    forecast = response.json()["data"]["weatherByPoint"]["forecast"]["days"][-1][
+        "parts"
+    ]["day"]
+
+    return [
+        f"Осадки: {PREC_TYPES[forecast["precType"]]}",
+        f"Температура: {forecast["temperature"]}",
+    ]
+
+
+def load_file_to_disk(content, oauth_key):
+    headers = {"Authorization": oauth_key}
+    params = {"path": "/result.txt", "overwrite": "true"}
+
+    response = requests.get(
+        "https://cloud-api.yandex.net/v1/disk/resources/upload",
+        params=params,
+        headers=headers,
+    )
+    if not response.ok:
+        return False
+
+    link = response.json()["href"]
+
+    headers = {"content-type": "text/plain"}
+    response = requests.put(link, content, headers=headers)
+    return True

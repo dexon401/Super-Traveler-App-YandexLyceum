@@ -6,3 +6,4 @@ __pycache__/
 config/config.json
 .vscode/
 .idea/
+result.txt

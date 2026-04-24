@@ -2,7 +2,7 @@ import sys
 import json
 import os
 
-from api_scripts import get_schedule, get_weather
+from api_scripts import get_schedule, get_weather, load_file_to_disk
 from datetime import datetime
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QInputDialog
@@ -50,38 +50,55 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.token = token
         self.weather_key = weather_api_key
         self.transport_key = transport_api_key
-        
+
         self.setupUi(self)
 
         self.fromCBox.addItems([*map(lambda place: place["name"], PLACES)])
         self.toCBox.addItems([*map(lambda place: place["name"], PLACES)])
-        
+
         self.dateEdit.setDate(datetime.now())
 
         self.showBtn.clicked.connect(self.on_show_btn_press)
+        self.saveBtn.clicked.connect(self.on_save_btn_press)
 
     def on_show_btn_press(self):
-        
+
         src = PLACES[self.fromCBox.currentIndex()]
         dest = PLACES[self.toCBox.currentIndex()]
         date = self.dateEdit.date().toPyDate().isoformat()
 
         if src == dest:
             return
-        
+
         schedule = get_schedule(src["code"], dest["code"], date, self.transport_key)
         self.textBrowser.setPlainText("\n".join(schedule))
         weather = get_weather(*dest["lat_lon"], date, self.weather_key)
-        
+
         if not weather:
-            self.weather0.setText("Погода доступна только на сегодня и на десять дней вперёд.")
+            self.weather0.setText(
+                "Погода доступна только на сегодня и на десять дней вперёд."
+            )
             self.weather1.clear()
             self.weather2.clear()
         else:
             self.weather0.setText(f"Погода в {dest["name"]}:")
             self.weather1.setText(weather[0])
             self.weather2.setText(weather[1])
-            
+
+    def on_save_btn_press(self):
+        text = self.textBrowser.toPlainText()
+        if not text:
+            return
+
+        result = load_file_to_disk(text, self.token)
+        if result:
+            self.statusbar.showMessage("Успешно сохранено на Яндекс Диск!")
+        else:
+            with open("result.txt", "w") as file:
+                file.write(text)
+            self.statusbar.showMessage(
+                "Провал сохранения на Яндекс Диск! Файл был сохранен локально."
+            )
 
 
 if __name__ == "__main__":
@@ -106,10 +123,24 @@ if __name__ == "__main__":
         transport_api_key, transport_ok = QInputDialog.getText(
             None, "Введите ключ", "Введите ключ API Яндекс Расписания"
         )
-        if token_ok and token and weather_ok and weather_api_key and transport_ok and transport_api_key :
+        if (
+            token_ok
+            and token
+            and weather_ok
+            and weather_api_key
+            and transport_ok
+            and transport_api_key
+        ):
             os.makedirs("config", exist_ok=True)
             with open("config/config.json", "w") as f:
-                json.dump({"token": token, "weather": weather_api_key, "transport": transport_api_key}, f)
+                json.dump(
+                    {
+                        "token": token,
+                        "weather": weather_api_key,
+                        "transport": transport_api_key,
+                    },
+                    f,
+                )
         else:
             print("Данные введены неправильно!")
             sys.exit(0)
