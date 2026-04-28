@@ -81,7 +81,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.weather1.clear()
             self.weather2.clear()
         else:
-            self.weather0.setText(f"Погода в {dest["name"]}:")
+            self.weather0.setText(f"Погода в {dest['name']}:")  # fixed nested quotes
             self.weather1.setText(weather[0])
             self.weather2.setText(weather[1])
 

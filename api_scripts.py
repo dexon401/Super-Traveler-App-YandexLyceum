@@ -52,7 +52,7 @@ def get_schedule(src, dest, date, transport_key):
         )
 
         result.append(
-            f"{TRANSPORT_TYPES[transport_type]}\t{number}\t{departure.strftime("%H:%M")}\t{arrival.strftime("%H:%M")}\t{string_duration}"
+            f"{TRANSPORT_TYPES[transport_type]}\t{number}\t{departure.strftime('%H:%M')}\t{arrival.strftime('%H:%M')}\t{string_duration}"
         )
 
     return result
@@ -96,8 +96,8 @@ def get_weather(lat, lon, date, weather_key):
     ]["day"]
 
     return [
-        f"Осадки: {PREC_TYPES[forecast["precType"]]}",
-        f"Температура: {forecast["temperature"]}",
+        f"Осадки: {PREC_TYPES[forecast['precType']]}",
+        f"Температура: {forecast['temperature']}",
     ]
 
 
